@@ -20,6 +20,12 @@ $(function(){
         return Math.random()*s;
     }
     
+    window.vector = {};
+    
+    vector.dist = function(spriteA, spriteB) {
+        return Math.sqrt(Math.pow(spriteA.x-spriteB.x,2) + Math.pow(spriteA.y-spriteB.y,2));
+    };
+    
     function exitBounce() {
         if (this.x<0 || this.x>W) {
             this.dx*=-1;
@@ -150,10 +156,7 @@ $(function(){
             };
             coin.onStep = function(){
                 if (this.dead) return;
-                var dx = Math.abs(this.x-pc.x);
-                var dy = Math.abs(this.y-pc.y);
-                var d = Math.sqrt(dx*dx+dy*dy);
-                if (d < 10) {
+                if (vector.dist(this,pc) < 10) {
                     this.dead = true;
                     this.dx = 0;
                     this.dy = 0;
