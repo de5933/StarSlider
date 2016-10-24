@@ -5,8 +5,6 @@ var K = {
     'd': false
 };
 
-
-
 $(function(){
     function setKey(key, pressed) {
         K[key] = pressed;
@@ -345,11 +343,16 @@ $(function(){
         }, Math.floor(1000/FPS) );
     }
     
-    $('#stop').click(function(){
+    function stopGame() {
         clearInterval(window.tt);
+    }
+    
+    $('#stop').click(function(){
+        stopGame();
     });
     
     $('#restart').click(function(){
+        stopGame();
         initGame();
         startGame();
     });
