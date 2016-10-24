@@ -96,9 +96,10 @@ $(function(){
         window.objects = [];
         window.map = [];
         window.pc = {};
+        window.coinCount = 10;
         
         initMap();
-        initCoins(100);
+        initCoins(coinCount);
         initBombs(10);
         initPlayerCharacter();
         initHUD();
@@ -188,6 +189,11 @@ $(function(){
                     this.dy = 0;
                     pc.hp--;
                 }
+                if (score >= coinCount) {
+                    this.dead = true;
+                    this.dx = 0;
+                    this.dy = 0;
+                }
             };
             bomb.onExit = exitWrap;
             objects.push(bomb);
@@ -261,11 +267,23 @@ $(function(){
                 this.dy=0;
             }
             
-            var f = 0.1;
-            if (K['d']) this.dx+= f;
-            if (K['a']) this.dx-= f;
-            if (K['w']) this.dy-= f;
-            if (K['s']) this.dy+= f;
+            var force = 0.1;
+            if (K['d']) {
+                this.dx+= force;
+                pc.fuelUsed++;
+            }
+            if (K['a']) {
+                this.dx-= force;
+                pc.fuelUsed++;
+            }
+            if (K['w']) {
+                this.dy-= force;
+                pc.fuelUsed++;
+            }
+            if (K['s']) {
+                this.dy+= force;
+                pc.fuelUsed++;
+            }
             
             if (K['x']) {
                 this.dx = 0;
@@ -277,6 +295,9 @@ $(function(){
         pc.y = H/2;
         pc._hpmax = 10;
         pc.hp = pc._hpmax;
+        
+        pc.fuelUsed = 0;
+        
         objects.push(pc);
     }
     
@@ -314,6 +335,17 @@ $(function(){
         };
         objects.push(healthdisplay);
         
+        var fuelDisplay = new Sprite();
+        fuelDisplay.x = 10;
+        fuelDisplay.y = 50;
+        fuelDisplay.onDraw = function(){
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'left';
+            ctx.font = "15px monospace";
+            ctx.fillText('Fuel Usage: ' + pc.fuelUsed, this.x, this.y);
+        };  
+        objects.push(fuelDisplay);
+        
         var title = new Sprite();
         title.x = W/2;
         title.y = H/2;
@@ -323,6 +355,12 @@ $(function(){
                 ctx.textAlign = 'center';
                 ctx.font = "50px monospace";
                 ctx.strokeText('GAME OVER', this.x, this.y);
+            }
+            else if (score >= coinCount) {
+                ctx.strokeStyle = '#ffffff';
+                ctx.textAlign = 'center';
+                ctx.font = "50px monospace";
+                ctx.strokeText('YOU WIN!', this.x, this.y);
             }
         };
         objects.push(title);
