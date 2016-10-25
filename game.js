@@ -150,6 +150,10 @@ $(function(){
                 this.dx = 0;
                 this.dy = 0;
                 pc.hp--;
+                var ex = new Explosion(this.x, this.y, 10);
+                ex.dx = pc.dx;
+                ex.dy = pc.dy;
+                objects.push(ex);
             }
             if (score >= coinCount) {
                 this.dead = true;
@@ -162,6 +166,24 @@ $(function(){
     class Explosion extends Sprite {
         constructor(x, y, size) {
             super();
+            this.x = x;
+            this.y = y;
+            this.size = size;
+            this.frame = 0;
+            this.lifetime = size;
+        }
+        
+        onDraw(){
+            if (this.frame>this.lifetime) return;
+            ctx.fillStyle = 'rgba(255,100,0,' + (1 - this.frame/this.lifetime) + ')';
+            //ctx.fillStyle = '#ffff0077';
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, 2*this.lifetime*Math.log(this.frame), 0, 2*Math.PI);
+            ctx.fill();
+        }
+        
+        onStep(){
+            this.frame++;
         }
     }
     
