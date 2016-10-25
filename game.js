@@ -21,7 +21,6 @@ $(function(){
     }
     
     window.vector = {};
-    
     vector.dist = function(spriteA, spriteB) {
         return Math.sqrt(Math.pow(spriteA.x-spriteB.x,2) + Math.pow(spriteA.y-spriteB.y,2));
     };
@@ -61,29 +60,109 @@ $(function(){
         }
     }
     
-    function Sprite() {
-        var self = this;
-        self.x = 0;
-        self.y = 0;
-        self.dx = 0;
-        self.dy = 0;
-
-        self.step = function(){ 
-            self.onStep(); 
+    class Sprite {
+        constructor() {
+            this.x = 0;
+            this.y = 0;
+            this.dx = 0;
+            this.dy = 0;
+        }
+        
+        step() { 
+            this.onStep(); 
             this.x += this.dx;
             this.y += this.dy;
             
-            if (self.x>W || self.y>H || self.x<0 || self.y<0) {
-                self.onExit();
+            if (this.x>W || this.y>H || this.x<0 || this.y<0) {
+                this.onExit();
             }
-        };
-        self.draw = function(){
-            self.onDraw();
-        };
+        }
         
-        self.onStep = function(){};
-        self.onDraw = function(){};
-        self.onExit = function(){};
+        draw() {
+            this.onDraw();
+        }
+        
+        onStep(){}
+        onDraw(){}
+        onExit(){}
+        
+    }
+    
+    class Coin extends Sprite {
+        constructor() {
+            super();
+            this.x = rnd(W);
+            this.y = rnd(H);
+            this.dx = rnd(5)-1.5;
+            this.dy = rnd(5)-1.5;
+            this.dead = false;
+            this.onExit = exitBounce;
+        }
+        
+        onDraw(){
+            ctx.fillStyle = this.dead?'#ffffff':'#00ff00';
+            var r = 3;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, r, 0, 2*Math.PI);
+            ctx.fill();
+        }
+        
+        onStep(){
+            if (this.dead) return;
+            if (vector.dist(this,pc) < 10) {
+                this.dead = true;
+                this.dx = 0;
+                this.dy = 0;
+                score++;
+            }
+        }
+    }
+    
+    class Bomb extends Sprite {
+        constructor() {
+            super();
+            this.x = rnd(W);
+            this.y = rnd(H);
+            this.dx = rnd(5)-1.5;
+            this.dy = rnd(5)-1.5;
+            this.dead = false;
+            this.onExit = exitWrap;
+        }
+        
+        onDraw(){
+            if (this.dead) return;
+            ctx.fillStyle = '#ff0000';
+            var r = 3;
+            ctx.beginPath();
+            ctx.moveTo(this.x, this.y - r);
+            ctx.lineTo(this.x - r, this.y);
+            ctx.lineTo(this.x, this.y + r);
+            ctx.lineTo(this.x + r, this.y);
+            ctx.fill();
+        }
+        
+        onStep(){
+            if (this.dead) return;
+            var dx = Math.abs(this.x-pc.x);
+            var dy = Math.abs(this.y-pc.y);
+            if (dx<10 && dy<10) {
+                this.dead = true;
+                this.dx = 0;
+                this.dy = 0;
+                pc.hp--;
+            }
+            if (score >= coinCount) {
+                this.dead = true;
+                this.dx = 0;
+                this.dy = 0;
+            }
+        }
+    }
+    
+    class Explosion extends Sprite {
+        constructor(x, y, size) {
+            super();
+        }
     }
     
     function initPage() {
@@ -138,68 +217,13 @@ $(function(){
     
     function initCoins(count) {
         for (var i = 0; i < count; i++) {
-            var coin = new Sprite();
-            coin.x = rnd(W);
-            coin.y = rnd(H);
-            coin.dx = rnd(5)-1.5;
-            coin.dy = rnd(5)-1.5;
-            coin.dead = false;
-            coin.onDraw = function(){
-                ctx.fillStyle = this.dead?'#ffffff':'#00ff00';
-                var r = 3;
-                ctx.beginPath();
-                ctx.moveTo(this.x, this.y - r);
-                ctx.lineTo(this.x - r, this.y);
-                ctx.lineTo(this.x, this.y + r);
-                ctx.lineTo(this.x + r, this.y);
-                ctx.fill();
-            };
-            coin.onStep = function(){
-                if (this.dead) return;
-                if (vector.dist(this,pc) < 10) {
-                    this.dead = true;
-                    this.dx = 0;
-                    this.dy = 0;
-                    score++;
-                }
-            };
-            coin.onExit = exitBounce;
-            objects.push(coin);
+            objects.push(new Coin());
         }
     }
     
     function initBombs(count) {
         for (var i = 0; i < count; i++) {
-            var bomb = new Sprite();
-            bomb.x = rnd(W);
-            bomb.y = rnd(H);
-            bomb.dx = rnd(5)-1.5;
-            bomb.dy = rnd(5)-1.5;
-            bomb.dead = false;
-            bomb.onDraw = function(){
-                if (this.dead) return;
-                ctx.fillStyle = '#ff0000';
-                var r = 3;
-                ctx.fillRect(this.x-r, this.y+r, 2*r, 2*r);
-            };
-            bomb.onStep = function(){
-                if (this.dead) return;
-                var dx = Math.abs(this.x-pc.x);
-                var dy = Math.abs(this.y-pc.y);
-                if (dx<10 && dy<10) {
-                    this.dead = true;
-                    this.dx = 0;
-                    this.dy = 0;
-                    pc.hp--;
-                }
-                if (score >= coinCount) {
-                    this.dead = true;
-                    this.dx = 0;
-                    this.dy = 0;
-                }
-            };
-            bomb.onExit = exitWrap;
-            objects.push(bomb);
+            objects.push(new Bomb());
         }
     }
     
@@ -210,9 +234,9 @@ $(function(){
             if (this.hp<=0) return;
             var r = 10;
             this.color = {
-                r: Math.floor(200+5.5*(10-this.hp)),
-                g: Math.floor(200*this.hp/10),
-                b: Math.floor(200*this.hp/10)
+                r: Math.floor(200+5.5*(this._hpmax-this.hp)),
+                g: Math.floor(200*this.hp/this._hpmax),
+                b: Math.floor(200*this.hp/this._hpmax)
             };
             ctx.fillStyle = 'rgb('+this.color.r+','+this.color.g+','+this.color.b+')';
             ctx.strokeStyle = '#777777';
@@ -296,7 +320,7 @@ $(function(){
         pc.onExit = exitBounce;
         pc.x = W/2;
         pc.y = H/2;
-        pc._hpmax = 10;
+        pc._hpmax = 3;
         pc.hp = pc._hpmax;
         
         pc.fuelUsed = 0;
