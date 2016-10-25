@@ -183,14 +183,21 @@ $(function(){
         window.pc = {};
         window.coinCount = 10;
         
-        initMap();
-        initCoins(coinCount);
-        initBombs(10);
         initPlayerCharacter();
-        initHUD();
+        var ui = initHUD();
+        var coins = initCoins(coinCount);
+        var bombs = initBombs(10);
+        //var maps = initMap();
+        
+        //objects = objects.concat(maps);
+        objects = objects.concat(coins);
+        objects = objects.concat(bombs);
+        objects.push(pc);
+        objects = objects.concat(ui);
     }
     
     function initMap() {
+        var spritelist = [];
         var tileImage = document.createElement('img');
         tileImage.src='stars.png';
         var r = 16;
@@ -210,21 +217,27 @@ $(function(){
                     this.x*r,this.y*r,
                     r,r);
                 };
-                map.push(tile);
+                spritelist.push(tile);
             }
         }
+        
+        return spritelist;
     }
     
     function initCoins(count) {
+        var spritelist = [];
         for (var i = 0; i < count; i++) {
-            objects.push(new Coin());
+            spritelist.push(new Coin());
         }
+        return spritelist;
     }
     
     function initBombs(count) {
+        var spritelist = [];
         for (var i = 0; i < count; i++) {
-            objects.push(new Bomb());
+            spritelist.push(new Bomb());
         }
+        return spritelist;
     }
     
     function initPlayerCharacter() {
@@ -329,6 +342,8 @@ $(function(){
     }
     
     function initHUD() {
+        var spritelist = [];
+        
         var scoreboard = new Sprite();
         scoreboard.x = 10;
         scoreboard.y = 20;
@@ -338,7 +353,7 @@ $(function(){
             ctx.font = "20px monospace";
             ctx.fillText('Score: ' + score,this.x,this.y);
         };
-        objects.push(scoreboard);
+        spritelist.push(scoreboard);
      
         var healthdisplay = new Sprite();
         healthdisplay.x = 150;
@@ -360,7 +375,7 @@ $(function(){
                 }
             }
         };
-        objects.push(healthdisplay);
+        spritelist.push(healthdisplay);
         
         var fuelDisplay = new Sprite();
         fuelDisplay.x = 10;
@@ -371,7 +386,7 @@ $(function(){
             ctx.font = "15px monospace";
             ctx.fillText('Fuel Usage: ' + pc.fuelUsed, this.x, this.y);
         };  
-        objects.push(fuelDisplay);
+        spritelist.push(fuelDisplay);
         
         var title = new Sprite();
         title.x = W/2;
@@ -390,7 +405,9 @@ $(function(){
                 ctx.strokeText('YOU WIN!', this.x, this.y);
             }
         };
-        objects.push(title);
+        spritelist.push(title);
+        
+        return spritelist;
     }
 
     function startGame() {
