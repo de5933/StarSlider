@@ -410,23 +410,25 @@ $(function(){
         return spritelist;
     }
 
+    function gameLoop() {
+        ctx.clearRect(0,0, W, H);
+        //ctx.fillStyle = '#00000022';
+        //ctx.fillRect(0, 0, W, H);
+        
+        var allSprites = objects;//map.concat(objects);
+        
+        for (var i in allSprites) {
+            allSprites[i].step();
+            allSprites[i].draw();
+        }
+    }
+    
     function startGame() {
-        window.tt = setInterval(function(){
-            ctx.clearRect(0,0, W, H);
-            //ctx.fillStyle = '#00000022';
-            //ctx.fillRect(0, 0, W, H);
-            
-            var allSprites = objects;//map.concat(objects);
-            
-            for (var i in allSprites) {
-                allSprites[i].step();
-                allSprites[i].draw();
-            }
-        }, Math.floor(1000/FPS) );
+        window.gameLoopTimer = setInterval(gameLoop, Math.floor(1000/FPS) );
     }
     
     function stopGame() {
-        clearInterval(window.tt);
+        clearInterval(window.gameLoopTimer);
     }
     
     $('#stop').click(function(){
