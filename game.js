@@ -276,7 +276,7 @@ $(function(){
     function initMap() {
         var spritelist = [];
         var tileImage = document.createElement('img');
-        tileImage.src='stars.png';
+        tileImage.src='stars-16x16.png';
         var r = 16;
         
         for (var j = 0; j < W/r; j++) {
@@ -284,8 +284,8 @@ $(function(){
                 var tile = new Sprite();
                 tile.x = i;
                 tile.y = j;
-                tile.sx = r*rnd(4);
-                tile.sy = r*rnd(4);
+                tile.sx = r*rnd(16);
+                tile.sy = r*rnd(16);
                
                 tile.onDraw = function(){
                     ctx.drawImage(tileImage, 
