@@ -519,6 +519,7 @@ $(function(){
     
     $('#restartGame').click(function(){
         stopGame();
+        currentLevel = 0;
         initGame();
         startGame();
     });
