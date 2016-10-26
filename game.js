@@ -20,50 +20,64 @@ $(function(){
         return Math.random()*s;
     }
     
-    window.vector = {};
-    vector.dist = function(spriteA, spriteB) {
-        return Math.sqrt(Math.pow(spriteA.x-spriteB.x,2) + Math.pow(spriteA.y-spriteB.y,2));
+    var exit = {
+        bounce: function() {
+            if (this.x<0 || this.x>W) {
+                this.dx*=-1;
+            }
+            if (this.y<0 || this.y>H) {
+                this.dy*=-1;
+            }
+        },
+        
+        wrap: function(){
+            if (this.x<0) this.x=W;
+            else if (this.x>W) this.x=0;
+            if (this.y<0) this.y=H;
+            else if (this.y>W) this.y=0;
+        },
+        
+        stick: function(){
+            if (this.x<0) {
+                this.x=0;
+                this.dx=0;
+            }
+            if (this.y<0) {
+                this.y=0;
+                this.dy=0;
+            }
+            if (this.x>W) {
+                this.x=W;
+                this.dx=0;
+            }
+            if (this.y>H) {
+                this.y=H;
+                this.dy=0;
+            }
+        }
     };
     
-    function exitBounce() {
-        if (this.x<0 || this.x>W) {
-            this.dx*=-1;
+    class Point {
+        constructor(x, y) {
+            this.x = x||0;
+            this.y = y||0;
         }
-        if (this.y<0 || this.y>H) {
-            this.dy*=-1;
-        }
-    }
-    
-    function exitWrap() {
-        if (this.x<0) this.x=W;
-        else if (this.x>W) this.x=0;
-        if (this.y<0) this.y=H;
-        else if (this.y>W) this.y=0;
-    }
-    
-    function exitStick() {
-        if (this.x<0) {
-            this.x=0;
-            this.dx=0;
-        }
-        if (this.y<0) {
-            this.y=0;
-            this.dy=0;
-        }
-        if (this.x>W) {
-            this.x=W;
-            this.dx=0;
-        }
-        if (this.y>H) {
-            this.y=H;
-            this.dy=0;
+        
+        static dist(v1, v2) {
+            return Math.sqrt(Math.pow(v1.x-v2.x,2) + Math.pow(v1.y-v2.y,2));
         }
     }
     
-    class Sprite {
-        constructor() {
-            this.x = 0;
-            this.y = 0;
+    class Vector {
+        constructor(dx, dy) {
+            this.dx = dx||0;
+            this.dy = dy||0;
+        }
+    }
+    
+    class Sprite extends Point {
+        constructor(x, y) {
+            super(x, y);
             this.dx = 0;
             this.dy = 0;
         }
@@ -89,14 +103,12 @@ $(function(){
     }
     
     class Coin extends Sprite {
-        constructor() {
-            super();
-            this.x = rnd(W);
-            this.y = rnd(H);
+        constructor(x, y) {
+            super(x, y);
             this.dx = rnd(5)-1.5;
             this.dy = rnd(5)-1.5;
             this.dead = false;
-            this.onExit = exitBounce;
+            this.onExit = exit.bounce;
         }
         
         onDraw(){
@@ -109,7 +121,7 @@ $(function(){
         
         onStep(){
             if (this.dead) return;
-            if (vector.dist(this,pc) < 10) {
+            if (Point.dist(this,pc) < 10) {
                 this.dead = true;
                 this.dx = 0;
                 this.dy = 0;
@@ -119,14 +131,12 @@ $(function(){
     }
     
     class Bomb extends Sprite {
-        constructor() {
-            super();
-            this.x = rnd(W);
-            this.y = rnd(H);
+        constructor(x, y) {
+            super(x, y);
             this.dx = rnd(5)-1.5;
             this.dy = rnd(5)-1.5;
             this.dead = false;
-            this.onExit = exitWrap;
+            this.onExit = exit.wrap;
         }
         
         onDraw(){
@@ -165,9 +175,7 @@ $(function(){
     
     class Explosion extends Sprite {
         constructor(x, y, size) {
-            super();
-            this.x = x;
-            this.y = y;
+            super(x, y);
             this.size = size;
             this.frame = 0;
             this.lifetime = size;
@@ -249,7 +257,7 @@ $(function(){
     function initCoins(count) {
         var spritelist = [];
         for (var i = 0; i < count; i++) {
-            spritelist.push(new Coin());
+            spritelist.push(new Coin(rnd(W),rnd(H)));
         }
         return spritelist;
     }
@@ -257,7 +265,7 @@ $(function(){
     function initBombs(count) {
         var spritelist = [];
         for (var i = 0; i < count; i++) {
-            spritelist.push(new Bomb());
+            spritelist.push(new Bomb(rnd(W),rnd(H)));
         }
         return spritelist;
     }
@@ -329,7 +337,7 @@ $(function(){
                 this.dy=0;
             }
             
-            var force = 0.1;
+            var force = 0.05;
             if (K['d']) {
                 this.dx+= force;
                 pc.fuelUsed++;
@@ -352,7 +360,7 @@ $(function(){
                 this.dy = 0;
             }
         };
-        pc.onExit = exitBounce;
+        pc.onExit = exit.bounce;
         pc.x = W/2;
         pc.y = H/2;
         pc._hpmax = 3;
