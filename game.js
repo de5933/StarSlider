@@ -80,9 +80,11 @@ $(function(){
             super(x, y);
             this.dx = 0;
             this.dy = 0;
+            this.dead = false;
         }
         
         step() { 
+            if (this.dead) return;
             this.onStep(); 
             this.x += this.dx;
             this.y += this.dy;
@@ -93,6 +95,7 @@ $(function(){
         }
         
         draw() {
+            if (this.dead) return;
             this.onDraw();
         }
         
@@ -107,7 +110,6 @@ $(function(){
             super(x, y);
             this.dx = rnd(5)-1.5;
             this.dy = rnd(5)-1.5;
-            this.dead = false;
             this.onExit = exit.bounce;
         }
         
@@ -120,8 +122,8 @@ $(function(){
         }
         
         onStep(){
-            if (this.dead) return;
             if (Point.dist(this,pc) < 10) {
+                objects.push(new CoinScored(this.x, this.y));
                 this.dead = true;
                 this.dx = 0;
                 this.dy = 0;
@@ -195,6 +197,31 @@ $(function(){
         }
     }
     
+    class CoinScored extends Sprite {
+        constructor(x, y) {
+            super(x, y);
+            this.frame = 0;
+            this.lifetime = 50;
+        }
+        
+        onDraw(){
+            if (this.frame>this.lifetime) return;
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = '#00ff00aa';
+            var r = 50 - this.frame*4;
+            
+            if (r<1) this.dead = true;
+            
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, r, 0, 2*Math.PI);
+            ctx.stroke();
+        }
+        
+        onStep(){
+            this.frame++;
+        }
+    }
+    
     function initPage() {
         window.W = 700;
         window.H = 700;
@@ -202,21 +229,41 @@ $(function(){
         canvas.width = H;
         canvas.height = H;
         window.ctx = canvas.getContext('2d');
-        initGame();
+        initGame(0);
+    }
+    
+    window.levels = [
+        {hp: 5, coins: 5, bombs: 0},
+        {hp: 5, coins: 5, bombs: 3},
+        {hp: 5, coins: 10, bombs: 10},
+        {hp: 3, coins: 10, bombs: 10},
+        {hp: 3, coins: 10, bombs: 20},
+        {hp: 3, coins: 15, bombs: 30}
+    ];
+    window.currentLevel = 0;
+    
+    function nextLevel() {
+        currentLevel++;
+        if (currentLevel >= levels.length) {
+            currentLevel = 0;
+        }
     }
     
     function initGame() {
+        level = levels[currentLevel];
+        
         window.FPS = 45;
         window.score = 0;
         window.objects = [];
         window.map = [];
         window.pc = {};
-        window.coinCount = 10;
+        window.coinCount = level.coins;
         
         initPlayerCharacter();
+        pc.setHP(level.hp);
         var ui = initHUD();
         var coins = initCoins(coinCount);
-        var bombs = initBombs(10);
+        var bombs = initBombs(level.bombs);
         //var maps = initMap();
         
         //objects = objects.concat(maps);
@@ -271,7 +318,7 @@ $(function(){
     }
     
     function initPlayerCharacter() {
-        pc = new Sprite();
+        pc = new Sprite(W/2,H/2);
 
         pc.onDraw = function(){
             if (this.hp<=0) return;
@@ -361,10 +408,14 @@ $(function(){
             }
         };
         pc.onExit = exit.bounce;
-        pc.x = W/2;
-        pc.y = H/2;
+        
         pc._hpmax = 3;
         pc.hp = pc._hpmax;
+        
+        pc.setHP = function(hp) {
+            pc.hp = hp;
+            pc._hpmax = Math.max(pc._hpmax, hp);
+        }
         
         pc.fuelUsed = 0;
         
@@ -374,9 +425,7 @@ $(function(){
     function initHUD() {
         var spritelist = [];
         
-        var scoreboard = new Sprite();
-        scoreboard.x = 10;
-        scoreboard.y = 20;
+        var scoreboard = new Sprite(10, 20);
         scoreboard.onDraw = function(){
             ctx.fillStyle = '#ffffff';
             ctx.textAlign = 'left';
@@ -385,9 +434,7 @@ $(function(){
         };
         spritelist.push(scoreboard);
      
-        var healthdisplay = new Sprite();
-        healthdisplay.x = 150;
-        healthdisplay.y = 20;
+        var healthdisplay = new Sprite(150, 20);
         healthdisplay.onDraw = function(){
             ctx.fillStyle = '#ffffff';
             ctx.textAlign = 'left';
@@ -407,9 +454,7 @@ $(function(){
         };
         spritelist.push(healthdisplay);
         
-        var fuelDisplay = new Sprite();
-        fuelDisplay.x = 10;
-        fuelDisplay.y = 50;
+        var fuelDisplay = new Sprite(10, 50);
         fuelDisplay.onDraw = function(){
             ctx.fillStyle = '#ffffff';
             ctx.textAlign = 'left';
@@ -418,9 +463,16 @@ $(function(){
         };  
         spritelist.push(fuelDisplay);
         
-        var title = new Sprite();
-        title.x = W/2;
-        title.y = H/2;
+        var levelDisplay = new Sprite(10, 70);
+        levelDisplay.onDraw = function(){
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'left';
+            ctx.font = "15px monospace";
+            ctx.fillText('Level ' + currentLevel, this.x, this.y);
+        };
+        spritelist.push(levelDisplay);
+        
+        var title = new Sprite(W/2, H/2);
         title.onDraw = function(){
             if (pc.hp<=0) {
                 ctx.strokeStyle = '#ffffff';
@@ -465,8 +517,21 @@ $(function(){
         stopGame();
     });
     
-    $('#restart').click(function(){
+    $('#restartGame').click(function(){
         stopGame();
+        initGame();
+        startGame();
+    });
+    
+    $('#restartLevel').click(function(){
+        stopGame();
+        initGame();
+        startGame();
+    });
+    
+    $('#nextlevel').click(function(){
+        stopGame();
+        nextLevel();
         initGame();
         startGame();
     });
