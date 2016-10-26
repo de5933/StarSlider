@@ -264,9 +264,9 @@ $(function(){
         var ui = initHUD();
         var coins = initCoins(coinCount);
         var bombs = initBombs(level.bombs);
-        //var maps = initMap();
+        var maps = initMap();
         
-        //objects = objects.concat(maps);
+        objects = objects.concat(maps);
         objects = objects.concat(coins);
         objects = objects.concat(bombs);
         objects.push(pc);
