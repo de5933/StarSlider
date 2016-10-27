@@ -155,9 +155,8 @@ $(function(){
         
         onStep(){
             if (this.dead) return;
-            var dx = Math.abs(this.x-pc.x);
-            var dy = Math.abs(this.y-pc.y);
-            if (dx<10 && dy<10) {
+            
+            if (Point.dist(this,pc) < 10) {
                 this.dead = true;
                 this.dx = 0;
                 this.dy = 0;
@@ -210,7 +209,10 @@ $(function(){
             ctx.strokeStyle = '#00ff00aa';
             var r = 50 - this.frame*4;
             
-            if (r<1) this.dead = true;
+            if (r<1) {
+                this.dead = true;
+                return;
+            }
             
             ctx.beginPath();
             ctx.arc(this.x, this.y, r, 0, 2*Math.PI);
@@ -223,10 +225,10 @@ $(function(){
     }
     
     function initPage() {
-        window.W = 700;
-        window.H = 700;
+        window.W = 1000;
+        window.H = 600;
         window.canvas = document.getElementById('game-canvas')
-        canvas.width = H;
+        canvas.width = W;
         canvas.height = H;
         window.ctx = canvas.getContext('2d');
         initGame(0);
@@ -278,14 +280,16 @@ $(function(){
         var tileImage = document.createElement('img');
         tileImage.src='stars-16x16.png';
         var r = 16;
+        var tileW = 16;
+        var tileH = 16;
         
-        for (var j = 0; j < W/r; j++) {
-            for (var i = 0; i < H/r; i++) {
+        for (var j = 0; j < H/r; j++) {
+            for (var i = 0; i < W/r; i++) {
                 var tile = new Sprite();
                 tile.x = i;
                 tile.y = j;
-                tile.sx = r*rnd(16);
-                tile.sy = r*rnd(16);
+                tile.sx = r*rnd(tileW);
+                tile.sy = r*rnd(tileH);
                
                 tile.onDraw = function(){
                     ctx.drawImage(tileImage, 
@@ -335,6 +339,7 @@ $(function(){
             ctx.lineTo(this.x - r, this.y);
             ctx.lineTo(this.x, this.y + r);
             ctx.lineTo(this.x + r, this.y);
+            ctx.lineTo(this.x, this.y - r);
             ctx.fill();
             ctx.stroke();
             
@@ -494,14 +499,14 @@ $(function(){
 
     function gameLoop() {
         ctx.clearRect(0,0, W, H);
-        //ctx.fillStyle = '#00000022';
+        //ctx.fillStyle = '#00000011';
         //ctx.fillRect(0, 0, W, H);
         
-        var allSprites = objects;//map.concat(objects);
-        
-        for (var i in allSprites) {
-            allSprites[i].step();
-            allSprites[i].draw();
+        for (var i in objects) {
+            objects[i].step();
+        }
+        for (var i in objects) {
+            objects[i].draw();
         }
     }
     
