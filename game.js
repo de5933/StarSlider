@@ -118,7 +118,7 @@ $(function(){
         constructor(x,y,r) {
             super(x,y)
             this.r = r||5;
-            this.onExit = exit.bounce;
+            this.onExit = exit.wrap;
             this.w = false;
             this.s = false;
             this.a = false;
@@ -212,7 +212,16 @@ $(function(){
                 }
             }
             
-            
+            if (Point.dist(this,pc) < 10 && (pc.hp < pc._hpmax)) {
+                var sw = new Shockwave(pc.x, pc.y, 'in', '#0077ff');
+                sw.dx = pc.dx;
+                sw.dy = pc.dy;
+                objects.push(sw);
+                this.dead = true;
+                this.dx = 0;
+                this.dy = 0;
+                pc.hp = Math.min(pc.hp+1, pc._hpmax);
+            }
         }
     }
     
@@ -234,7 +243,7 @@ $(function(){
         
         onStep(){
             if (Point.dist(this,pc) < 10) {
-                objects.push(new CoinScored(this.x, this.y));
+                objects.push(new Shockwave(this.x, this.y, 'in', '#00ff00'));
                 this.dead = true;
                 this.dx = 0;
                 this.dy = 0;
@@ -307,26 +316,40 @@ $(function(){
         }
     }
     
-    class CoinScored extends Sprite {
-        constructor(x, y) {
+    class Shockwave extends Sprite {
+        constructor(x, y, direction, color) {
             super(x, y);
             this.frame = 0;
             this.lifetime = 50;
+            this.direction = direction || 'out';
+            this.color = color || 'white';
+            
+            if (this.direction==='out')
+                this.r = 0;
+            else if (this.direction==='in')
+                this.r = this.lifetime;
         }
         
         onDraw(){
-            if (this.frame>this.lifetime) return;
-            ctx.fillStyle = '#ffffff';
-            ctx.strokeStyle = '#00ff00aa';
-            var r = 50 - this.frame*4;
+            if (this.frame > this.lifetime) {
+                this.dead = true;
+                return;
+            }
             
-            if (r<1) {
+            ctx.strokeStyle = this.color;
+            
+            if (this.direction==='out') 
+                this.r = 4*this.frame;
+            else if (this.direction==='in') 
+                this.r = 50 - 4*this.frame;
+            
+            if (this.r < 0) {
                 this.dead = true;
                 return;
             }
             
             ctx.beginPath();
-            ctx.arc(this.x, this.y, r, 0, 2*Math.PI);
+            ctx.arc(this.x, this.y, this.r, 0, 2*Math.PI);
             ctx.stroke();
         }
         
@@ -346,12 +369,12 @@ $(function(){
     }
     
     window.levels = [
-        {hp: 5, coins: 5, bombs: 0},
-        {hp: 5, coins: 5, bombs: 3},
-        {hp: 5, coins: 10, bombs: 10},
-        {hp: 3, coins: 10, bombs: 10},
-        {hp: 3, coins: 10, bombs: 20},
-        {hp: 3, coins: 15, bombs: 30}
+        {hp: 5, coins:  5, bombs:  0, npcs: 1},
+        {hp: 5, coins:  5, bombs:  3, npcs: 2},
+        {hp: 5, coins: 10, bombs: 10, npcs: 3},
+        {hp: 3, coins: 10, bombs: 10, npcs: 4},
+        {hp: 3, coins: 10, bombs: 20, npcs: 5},
+        {hp: 3, coins: 15, bombs: 30, npcs: 6}
     ];
     window.currentLevel = 0;
     
@@ -378,12 +401,12 @@ $(function(){
         var coins = initCoins(coinCount);
         var bombs = initBombs(level.bombs);
         var maps = initMap();
+        var npcs = initNpcs(level.npcs);
         
         objects = objects.concat(maps);
         objects = objects.concat(coins);
         objects = objects.concat(bombs);
-        for (var i = 0; i < 10; i++) 
-            objects.push(new Npc(rnd(W), rnd(H), 2+rnd(5)));
+        objects = objects.concat(npcs);
         objects.push(pc);
         objects = objects.concat(ui);
     }
@@ -430,6 +453,14 @@ $(function(){
         var spritelist = [];
         for (var i = 0; i < count; i++) {
             spritelist.push(new Bomb(rnd(W),rnd(H)));
+        }
+        return spritelist;
+    }
+    
+    function initNpcs(count) {
+        var spritelist = [];
+        for (var i = 0; i < count; i++) {
+            spritelist.push(new Npc(rnd(W),rnd(H),2+rnd(5)));
         }
         return spritelist;
     }
@@ -615,12 +646,17 @@ $(function(){
         //ctx.fillStyle = '#00000011';
         //ctx.fillRect(0, 0, W, H);
         
+        var nextLoopObjects = [];
+        
         for (var i in objects) {
             objects[i].step();
         }
+        
         for (var i in objects) {
             objects[i].draw();
         }
+        
+        objects = objects.filter(function(sprite){return !sprite.dead;});
     }
     
     function startGame() {
