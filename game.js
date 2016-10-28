@@ -2,7 +2,8 @@ var K = {
     'w': false,
     's': false,
     'a': false,
-    'd': false
+    'd': false,
+	'z': false
 };
 
 $(function(){
@@ -13,7 +14,7 @@ $(function(){
     $(document.body).keyup(function(e){
         setKey(e.key, false);
     }).keydown(function(e){
-        setKey(e.key, true);
+		setKey(e.key, true);
     });
     
     function rnd(s) {
@@ -488,7 +489,8 @@ $(function(){
             ctx.stroke();
             
             ctx.fillStyle = '#ff7700';
-            
+           
+			
             // Bottom
             if (K['w']) {
                 ctx.beginPath();
@@ -532,7 +534,18 @@ $(function(){
                 this.dx=0;
                 this.dy=0;
             }
-            
+            if(K['z'] && pc.warpCoolDown===0){
+				this.x = rnd(W);
+				this.y = rnd(H);
+				pc.warpCoolDown = 100;
+				var ex = new Explosion(this.x, this.y, 10);
+                ex.dx = pc.dx;
+                ex.dy = pc.dy;
+                objects.push(ex);
+			}
+			if(pc.warpCoolDown > 0){
+				pc.warpCoolDown--;
+			}
             var force = 0.05;
             if (K['d']) {
                 this.dx+= force;
@@ -567,7 +580,7 @@ $(function(){
         }
         
         pc.fuelUsed = 0;
-        
+        pc.warpCoolDown = 0;
         objects.push(pc);
     }
     
