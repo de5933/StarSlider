@@ -360,8 +360,8 @@ $(function(){
     }
     
     function initPage() {
-        window.W = 1000;
-        window.H = 600;
+        window.W = window.innerWidth - 100;
+        window.H = window.innerHeight - 100;
         window.canvas = document.getElementById('game-canvas')
         canvas.width = W;
         canvas.height = H;
@@ -370,12 +370,17 @@ $(function(){
     }
     
     window.levels = [
-        {hp: 5, coins:  5, bombs:  0, npcs: 1},
-        {hp: 5, coins:  5, bombs:  3, npcs: 2},
-        {hp: 5, coins: 10, bombs: 10, npcs: 3},
-        {hp: 3, coins: 10, bombs: 10, npcs: 4},
-        {hp: 3, coins: 10, bombs: 20, npcs: 5},
-        {hp: 3, coins: 15, bombs: 30, npcs: 6}
+        {hp: 5, coins:  5, bombs:  0, npcs: 0},
+        {hp: 5, coins:  5, bombs:  3, npcs: 1},
+        {hp: 5, coins: 10, bombs: 10, npcs: 2},
+        {hp: 3, coins: 10, bombs: 10, npcs: 3},
+        {hp: 3, coins: 10, bombs: 20, npcs: 6},
+        {hp: 3, coins: 15, bombs: 30, npcs: 10},
+        {hp: 3, coins: 15, bombs: 40, npcs: 13},
+        {hp: 3, coins: 20, bombs: 50, npcs: 16},
+        {hp: 3, coins: 25, bombs: 60, npcs: 20},
+        {hp: 3, coins: 30, bombs: 70, npcs: 23},
+        {hp: 3, coins: 35, bombs: 80, npcs: 26}
     ];
     window.currentLevel = 0;
     
@@ -538,7 +543,7 @@ $(function(){
 				this.x = rnd(W);
 				this.y = rnd(H);
 				pc.warpCoolDown = 100;
-				var ex = new Explosion(this.x, this.y, 10);
+				var ex = new Shockwave(this.x, this.y, 'out', '#ff00ff');
                 ex.dx = pc.dx;
                 ex.dy = pc.dy;
                 objects.push(ex);
