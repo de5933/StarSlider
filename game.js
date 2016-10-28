@@ -20,6 +20,15 @@ $(function(){
         return Math.random()*s;
     }
     
+    function chance(threshold, range) {
+        return rnd(range)<=threshold;
+    }
+    
+    function rndChoose(arr) {
+        var index = Math.floor(rnd(arr.length));
+        return arr[index];
+    }
+    
     var exit = {
         bounce: function() {
             if (this.x<0 || this.x>W) {
@@ -103,6 +112,108 @@ $(function(){
         onDraw(){}
         onExit(){}
         
+    }
+    
+    class Npc extends Sprite {
+        constructor(x,y,r) {
+            super(x,y)
+            this.r = r||5;
+            this.onExit = exit.bounce;
+            this.w = false;
+            this.s = false;
+            this.a = false;
+            this.d = false;
+        }
+        onDraw() {
+            ctx.fillStyle = '#0077ff';
+            ctx.strokeStyle = '#0000ff';
+            ctx.fillRect(this.x-this.r, this.y-this.r, 2*this.r, 2*this.r);
+            ctx.strokeRect(this.x-this.r, this.y-this.r, 2*this.r, 2*this.r);
+            
+            ctx.fillStyle = '#ff7700';
+            
+            // Bottom
+            if (this.w) {
+                ctx.beginPath();
+                ctx.moveTo(this.x-3, this.y+this.r+5);
+                ctx.lineTo(this.x+3, this.y+this.r+5);
+                ctx.lineTo(this.x, this.y+this.r+5+10);
+                ctx.fill();
+            }
+            
+            // Top
+            if (this.s) {
+                ctx.beginPath();
+                ctx.moveTo(this.x-3, this.y-this.r-5);
+                ctx.lineTo(this.x+3, this.y-this.r-5);
+                ctx.lineTo(this.x, this.y-this.r-5-10);
+                ctx.fill();
+            }
+            
+            // Left
+            if (this.a) {
+                ctx.beginPath();
+                ctx.moveTo(this.x+this.r+5, this.y-3);
+                ctx.lineTo(this.x+this.r+5, this.y+3);
+                ctx.lineTo(this.x+this.r+5+10, this.y);
+                ctx.fill();
+            }
+            
+            // Right
+            if (this.d) {
+                ctx.beginPath();
+                ctx.moveTo(this.x-this.r-5, this.y-3);
+                ctx.lineTo(this.x-this.r-5, this.y+3);
+                ctx.lineTo(this.x-this.r-5-10, this.y);
+                ctx.fill();
+            }
+        }
+        onStep() {
+            var force = 0.5;
+            var vmax = 5;
+            
+            this.w = false;
+            this.s = false;
+            this.a = false;
+            this.d = false;
+            
+            if (chance(1,50)) {
+                var direction = rndChoose(['w','s','a','d']);
+                if (direction==='w') {
+                    this.dy -= force;
+                    this.w = true;
+                }
+                else if (direction==='s') {
+                    this.dy += force;
+                    this.s = true;
+                }
+                else if (direction==='a') {
+                    this.dx-=force;
+                    this.a = true;
+                }
+                else if (direction==='d') {
+                    this.dx+=force;
+                    this.d = true;
+                }
+            }
+            else if (chance(1,50)) {
+                if (this.dx/force > vmax) {
+                    this.dx -= force;
+                }
+                else if (this.dx/force < (-1*vmax)) {
+                    this.dx += force;
+                }
+                
+                if (this.dy/force > vmax) {
+                    this.dy -= force;
+                }
+                else if (this.dy/force < (-1*vmax)) {
+                    this.dy += force;
+                }
+            }
+            
+            
+        }
     }
     
     class Coin extends Sprite {
@@ -271,6 +382,8 @@ $(function(){
         objects = objects.concat(maps);
         objects = objects.concat(coins);
         objects = objects.concat(bombs);
+        for (var i = 0; i < 10; i++) 
+            objects.push(new Npc(rnd(W), rnd(H), 2+rnd(5)));
         objects.push(pc);
         objects = objects.concat(ui);
     }
@@ -515,11 +628,14 @@ $(function(){
     }
     
     function stopGame() {
-        clearInterval(window.gameLoopTimer);
+        gameLoopTimer = clearInterval(gameLoopTimer);
     }
     
-    $('#stop').click(function(){
-        stopGame();
+    $('#pause').click(function(){
+        if (gameLoopTimer)
+            stopGame();
+        else
+            startGame();
     });
     
     $('#restartGame').click(function(){
