@@ -226,6 +226,25 @@ $(function(){
         }
     }
     
+    class NpcFollow extends Npc {
+      constructor(x,y,r) {
+         super(x,y,r);
+         this.onExit = exit.bounce;
+      }
+      
+      onStep() {
+         var vmax = 1;
+         this.dx += (pc.x - this.x)/100;
+         this.dy += (pc.y - this.y)/100;
+         
+         this.dx = Math.min(this.dx, vmax);
+         this.dy = Math.min(this.dy, vmax);
+         
+         this.dx = Math.max(this.dx, -vmax);
+         this.dy = Math.max(this.dy, -vmax);
+      } 
+    }
+    
     class Coin extends Sprite {
         constructor(x, y) {
             super(x, y);
@@ -685,33 +704,47 @@ $(function(){
         gameLoopTimer = clearInterval(gameLoopTimer);
     }
     
-    $('#pause').click(function(){
-        if (gameLoopTimer)
-            stopGame();
-        else
-            startGame();
-    });
+    function pause() {
+       if (gameLoopTimer)
+          stopGame();
+      else
+          startGame();
+    }
     
-    $('#restartGame').click(function(){
+    function restartGame() {
+       stopGame();
+       currentLevel = 0;
+       initGame();
+       startGame();
+    }
+    
+    function restartLevel() {
         stopGame();
-        currentLevel = 0;
         initGame();
         startGame();
-    });
+    }
     
-    $('#restartLevel').click(function(){
-        stopGame();
-        initGame();
-        startGame();
-    });
-    
-    $('#nextlevel').click(function(){
+    function startNextLevel() {
         stopGame();
         nextLevel();
         initGame();
         startGame();
-    });
+    }
     
     initPage();
     startGame();
+    
+    var vm = {
+          addFn: function(fn) {
+             if (fn.name)
+                vm[fn.name] = fn;
+          }
+    };
+    vm.addFn(pause);
+    vm.addFn(startGame);
+    vm.addFn(stopGame);
+    vm.addFn(restartLevel);
+    vm.addFn(startNextLevel);
+    
+    ko.applyBindings(vm);
 });
