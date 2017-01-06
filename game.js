@@ -514,42 +514,43 @@ $(function(){
             
             ctx.fillStyle = '#ff7700';
            
-			
+			if(pc.currentFuel > 0){
             // Bottom
-            if (K['w']) {
-                ctx.beginPath();
-                ctx.moveTo(this.x-3, this.y+r+5);
-                ctx.lineTo(this.x+3, this.y+r+5);
-                ctx.lineTo(this.x, this.y+r+5+10);
-                ctx.fill();
-            }
+				if (K['w']) {
+					ctx.beginPath();
+					ctx.moveTo(this.x-3, this.y+r+5);
+					ctx.lineTo(this.x+3, this.y+r+5);
+					ctx.lineTo(this.x, this.y+r+5+10);
+					ctx.fill();
+				}
             
             // Top
-            if (K['s']) {
-                ctx.beginPath();
-                ctx.moveTo(this.x-3, this.y-r-5);
-                ctx.lineTo(this.x+3, this.y-r-5);
-                ctx.lineTo(this.x, this.y-r-5-10);
-                ctx.fill();
-            }
+				if (K['s']) {
+					ctx.beginPath();
+					ctx.moveTo(this.x-3, this.y-r-5);
+					ctx.lineTo(this.x+3, this.y-r-5);
+					ctx.lineTo(this.x, this.y-r-5-10);
+					ctx.fill();
+				}
             
             // Left
-            if (K['a']) {
-                ctx.beginPath();
-                ctx.moveTo(this.x+r+5, this.y-3);
-                ctx.lineTo(this.x+r+5, this.y+3);
-                ctx.lineTo(this.x+r+5+10, this.y);
-                ctx.fill();
-            }
+				if (K['a']) {
+					ctx.beginPath();
+					ctx.moveTo(this.x+r+5, this.y-3);
+					ctx.lineTo(this.x+r+5, this.y+3);
+					ctx.lineTo(this.x+r+5+10, this.y);
+					ctx.fill();
+				}
             
             // Right
-            if (K['d']) {
-                ctx.beginPath();
-                ctx.moveTo(this.x-r-5, this.y-3);
-                ctx.lineTo(this.x-r-5, this.y+3);
-                ctx.lineTo(this.x-r-5-10, this.y);
-                ctx.fill();
-            }
+				if (K['d']) {
+					ctx.beginPath();
+					ctx.moveTo(this.x-r-5, this.y-3);
+					ctx.lineTo(this.x-r-5, this.y+3);
+					ctx.lineTo(this.x-r-5-10, this.y);
+					ctx.fill();
+				}
+			}
         };
         pc.onStep = function(){
             if (this.hp<=0) {
@@ -571,27 +572,48 @@ $(function(){
 				pc.warpCoolDown--;
 			}
             var force = 0.05;
-            if (K['d']) {
-                this.dx+= force;
-                pc.fuelUsed++;
-            }
-            if (K['a']) {
-                this.dx-= force;
-                pc.fuelUsed++;
-            }
-            if (K['w']) {
-                this.dy-= force;
-                pc.fuelUsed++;
-            }
-            if (K['s']) {
-                this.dy+= force;
-                pc.fuelUsed++;
-            }
+			if(pc.currentFuel > 0){
+				if (K['d']) {
+					this.dx+= force;
+					pc.fuelUsed++;
+					pc.currentFuel--;
+				}
+				if (K['a']) {
+					this.dx-= force;
+					pc.fuelUsed++;
+					pc.currentFuel--;
+				}
+				if (K['w']) {
+					this.dy-= force;
+					pc.fuelUsed++;
+					pc.currentFuel--;
+				}
+				if (K['s']) {
+					this.dy+= force;
+					pc.fuelUsed++;
+					pc.currentFuel--;
+				}
             
-            if (K['x']) {
-                this.dx = 0;
-                this.dy = 0;
-            }
+				if (K['x']) {
+					this.dx = 0;
+					this.dy = 0;
+					pc.currentFuel-10;
+				}
+			}
+			if(pc.currentFuel === 0 && pc.outtaFuel === false){
+				pc.outtaFuel  = true;
+				pc.fuelRechargeCoolDown = 7;
+			}
+			
+			if(pc.currentFuel < 500 && pc.fuelRechargeCoolDown === 0){
+				pc.fuelRechargeCoolDown = 3;
+				pc.currentFuel+=1;
+				pc.outtaFuel = false;
+			}
+			if(pc.fuelRechargeCoolDown > 0){
+				pc.fuelRechargeCoolDown--;
+			}
+			
         };
         pc.onExit = exit.bounce;
         
@@ -602,9 +624,11 @@ $(function(){
             pc.hp = hp;
             pc._hpmax = Math.max(pc._hpmax, hp);
         }
-        
+        pc.currentFuel = 500;
         pc.fuelUsed = 0;
         pc.warpCoolDown = 0;
+		pc.outtaFuel = false;
+		pc.fuelRechargeCoolDown = 3;
         objects.push(pc);
     }
     
@@ -649,7 +673,16 @@ $(function(){
         };  
         spritelist.push(fuelDisplay);
         
-        var levelDisplay = new Sprite(10, 70);
+		var currentFuelDisplay = new Sprite(10, 70);
+        currentFuelDisplay.onDraw = function(){
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'left';
+            ctx.font = "15px monospace";
+            ctx.fillText('Current Fuel: ' + pc.currentFuel, this.x, this.y);
+        };  
+        spritelist.push(currentFuelDisplay);
+		
+        var levelDisplay = new Sprite(10, 90);
         levelDisplay.onDraw = function(){
             ctx.fillStyle = '#ffffff';
             ctx.textAlign = 'left';
