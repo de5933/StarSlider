@@ -2,8 +2,9 @@
 <head>
     <title>Star Slider</title>
     <meta charset="utf8"/>
-	<script src="../color/color.js" type="text/javascript"></script>
+	 <script type="text/javascript" src="../color/color.js" ></script>
     <script type="text/javascript" src="jquery-1.11.3.js"></script>
+    <script type="text/javascript" src="knockout-3.4.0.debug.js"></script>
     <script type="text/javascript" src="game.js"></script>
     <link href="game.css" rel="stylesheet" type="text/css"/>
     
@@ -16,11 +17,11 @@
 
 <canvas id="game-canvas"></canvas>
 <div>
-    <input type="button" id="pause" value="Pause"/>
-    <input type="button" id="restartGame" value="Restart Game"/>
-    <input type="button" id="restartLevel" value="Restart Level"/>
+    <input type="button" id="pause" value="Pause" data-bind="click: pause"/>
+    <input type="button" id="restartGame" value="Restart Game" data-bind="click: restartGame"/>
+    <input type="button" id="restartLevel" value="Restart Level" data-bind="click: restartLevel"/>
     
-    <input type="button" id="nextlevel" value="Next Level"/>
+    <input type="button" id="nextlevel" value="Next Level" data-bind="click: startNextLevel"/>
 </div>
 
 </body>

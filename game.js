@@ -428,7 +428,7 @@ $(function(){
         var maps = initMap();
         var npcs = initNpcs(level.npcs);
         
-        objects = objects.concat(maps);
+        //objects = objects.concat(maps);
         objects = objects.concat(coins);
         objects = objects.concat(bombs);
         objects = objects.concat(npcs);
